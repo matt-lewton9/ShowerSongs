@@ -3,8 +3,8 @@ from discord.ext import commands
 from showerHelper import *
 import os
 
-#hexidecimal color code constants
-GREEN= 0x00D31F
+GREEN= 0x00D31F #hexidecimal color code constants
+QUEUE_LEN = 32 #Max number of songs that an be queued
 
 class Musica(commands.Cog):
     def __init__(self, bot):
@@ -22,9 +22,14 @@ class Musica(commands.Cog):
         query = makeString(args) #get text string from message
         song_url = get_song(query) #get song url from ytdl
 
-        self.queue.append(song_url) #add song url to queue
-        embed = embedBuilder(title=f"{song_url['title']} Added to Queue", url=song_url['webpage'])#make embed
+        if len(self.queue) < QUEUE_LEN:
+            self.queue.append(song_url) #add song url to queue
+            embed = embedBuilder(title=f"{song_url['title']} Added to Queue", url=song_url['webpage'])#make embed
+        else:
+            embed = embedBuilder(title="Queue Full")#make embed
+
         await ctx.send(embed = embed) #send embed
+
 
         await self.play_next(ctx) #play next queued
 
