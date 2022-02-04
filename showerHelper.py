@@ -22,16 +22,19 @@ def get_song(query):
     ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
     info = ytdl.extract_info(query, download=False)
     
-    url = {}
-    if info['_type'] == 'playlist':
-        url['audio'] =  info['entries'][0]['url']
-        url['title'] =  info['entries'][0]['title']
-        url['webpage'] = info['entries'][0]['webpage_url']
+    url = {} #make url object to store info abt video
+    if info['_type'] == 'playlist': #if it is a playlist pick the top one
+        url['audio'] =  info['entries'][0]['url'] #get vid url
+        url['title'] =  info['entries'][0]['title'] #get vid title
+        url['webpage'] = info['entries'][0]['webpage_url'] #get vid title
+        url['duration'] = info['entries'][0]['duration'] #get vid duration
     else:
-        url['audio'] =  info['entries']['url']
-        url['title'] =  info['entries']['title']
-        url['webpage'] = info['entries']['webpage_url']
-    return url
+        url['audio'] =  info['entries']['url'] #get vid url
+        url['title'] =  info['entries']['title'] #get vid title
+        url['webpage'] = info['entries']['webpage_url'] #get vid title
+        url['duration'] = info['entries'][0]['duration'] #get vid duration
+
+    return url #return url with vid info
     
 def makeString(args):
     text = "" #get text string from args
@@ -55,3 +58,22 @@ def embedBuilder(title = None, description = None, fields = None, colour = 0x00D
         for entry in fields: #for each field
             embed.add_field(name=entry[0], value=entry[1], inline=entry[2]) #title, value, inline? (T/F)
     return embed #return embed
+
+def timeFormat(sec): #format seconds to HH:MM:SS
+    timeObjects = [sec / 3600, sec / 60, sec % 60]
+
+    timeObjects = [sec / 3600, sec / 60, sec % 60]
+
+    for idx in range(3):  #add zeros to time objects and save as strings
+        time = timeObjects[idx]
+        if time < 10: #if less than 10, add 0 in front
+            timeObjects[idx] = "0" + str(int(time))
+        else: 
+            timeObjects[idx] = str(time)
+
+    if int(timeObjects[0]) > 0: # if there are hours include them, otherwise omit
+        format = f'{timeObjects[0]}:{timeObjects[1]}:{timeObjects[2]}'
+    else:
+        format = f'{timeObjects[1]}:{timeObjects[2]}'
+
+    return format #return formatted time string

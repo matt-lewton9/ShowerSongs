@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from showerHelper import *
 import os
+import time
 
 GREEN= 0x00D31F #hexidecimal color code constants
 QUEUE_LEN = 32 #Max number of songs that an be queued
@@ -12,7 +13,7 @@ class Musica(commands.Cog):
         self.queue = [] #empty queue
         self.now_playing = "None" #init no song playing
 
-    @commands.command(brief='Play song from Youtube, or add it to the Queue', aliases=['play'])
+    @commands.command(brief='Play song from Youtube, or add it to the Queue')
     async def p(self, ctx, *args):
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild) #get voice client
         if voice == None: #if voice client doesn't exist, print error message
@@ -67,15 +68,9 @@ class Musica(commands.Cog):
         if self.now_playing == 'None':
             embed = embedBuilder(title='**Now Playing**', description="None") #if nothing is playing, np is none
         else:
-            embed = embedBuilder(title=f'**Now Playing: {self.now_playing["title"]}**\n{self.now_playing["webpage"]}', url=self.now_playing['webpage'])#make embed
+            timeElapsed = int(time.time() - self.now_playing["start_time"]) #calculate time elapsed
+            embed = embedBuilder(title=f'**Now Playing: {self.now_playing["title"]}**\n{self.now_playing["webpage"]},\n{timeFormat(timeElapsed)} / {timeFormat(self.now_playing["duration"])} Elapsed', url=self.now_playing['webpage'])#make embed
         await ctx.send(embed = embed) #send embed
-
-    @commands.command(brief = 'Leave voice call') #leave call
-    async def leave(self, ctx, description='Leave VC'):
-        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild) #get voice client
-        await voice.disconnect() #disconnect voice client
-        embed = embedBuilder(title="Farewell Comrades :flag_al:", url="https://www.youtube.com/watch?v=Yg03q100E4g")#make embed
-        await ctx.guild.channels[-1].send(embed = embed) #send leaving message
 
     @commands.command(brief = 'Pause audio playing') #pause audio
     async def pause(self, ctx):
@@ -106,7 +101,7 @@ class Musica(commands.Cog):
         if len(self.queue) == 0: #if queue is empty, say so
             await ctx.send("Queue is empty")
             self.now_playing = 'None'
-            await self.leave(ctx)
+            await voice.disconnect(ctx) #leave call
         else:
             if not voice.is_playing():
                 self.now_playing = self.queue[0] #set now playing
@@ -114,6 +109,7 @@ class Musica(commands.Cog):
                 audio_source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(executable="C:/Users/black/ffmpeg/bin/ffmpeg.exe", source=self.now_playing['audio'])) #get audio source
                 voice.play(audio_source, after = lambda error: self.bot.loop.create_task(self.play_next(ctx))) #play file
                 embed = embedBuilder(title="Now Playing:", fields=[[self.now_playing['title'], self.now_playing['webpage'], False]]) #create embedded message
+                self.now_playing["start_time"] = time.time() #set start time for song
                 await ctx.send(embed = embed) #send embed message
 
 def setup(bot): #set up cog
