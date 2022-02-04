@@ -31,7 +31,6 @@ class Musica(commands.Cog):
 
         await ctx.send(embed = embed) #send embed
 
-
         await self.play_next(ctx) #play next queued
 
     @commands.command(brief = 'Show queue', aliases=['queue']) #clear queue
@@ -79,7 +78,7 @@ class Musica(commands.Cog):
         await ctx.send(embed = embed) #send embed
         await voice.pause() #pause audio
 
-    @commands.command(brief='!rm /#/ -> Remove a song from queue', aliases =['remove'])
+    @commands.command(brief='$rm /#/ -> Remove a song from queue', aliases =['remove'])
     async def rm(self, ctx, *args):
         target = int(args[0]) #get target song from args
         mortal = self.queue[target - 1] #get song to be removed
@@ -95,13 +94,40 @@ class Musica(commands.Cog):
         await ctx.send(embed = embed) #send embed
         await voice.resume() #resume audio
 
+    @commands.command(brief='$loop /n/ {song} -> Loop a song by adding it to the queue n times.')
+    async def loop(self, ctx, *args):
+        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild) #get voice client
+        if voice == None: #if voice client doesn't exist, print error message
+            voice = await ctx.guild.voice_channels[0].connect() #Join VC, make voice client
+
+        song_url = {}
+        query = makeString(args[1:]) #get text string from message
+        loopNum = int(args[0]) + 1 #get number of times to loop
+        song_url = get_song(query) #get song url from ytdl
+
+        if loopNum > 11: #limit loops to 10
+            ctx.send("Get a life. Song looped 0 times")
+            loopNum = 1
+
+        if len(self.queue) < QUEUE_LEN: #if queue not full
+            for idx in range(loopNum): #add song url to queue loopNum times
+                self.queue.append(song_url) #add song url to queue loopNum times
+                embed = embedBuilder(title=f"{song_url['title']} Added to Queue", url=song_url['webpage'], description=f"Looped {loopNum} times")#make embed
+        else:
+            embed = embedBuilder(title="Queue Full")#make embed
+        
+        await ctx.send(embed = embed) #send embed
+
+        await self.play_next(ctx) #play next queued
+
+
     async def play_next(self, ctx): #play next song in queue
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild) #get voice client
 
         if len(self.queue) == 0: #if queue is empty, say so
             await ctx.send("Queue is empty")
             self.now_playing = 'None'
-            await voice.disconnect(ctx) #leave call
+            await voice.disconnect() #leave call
         else:
             if not voice.is_playing():
                 self.now_playing = self.queue[0] #set now playing
