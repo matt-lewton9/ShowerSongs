@@ -13,7 +13,7 @@ class Musica(commands.Cog):
         self.queue = [] #empty queue
         self.now_playing = "None" #init no song playing
 
-    @commands.command(brief='Play song from Youtube, or add it to the Queue')
+    @commands.command(brief='Play song from Youtube, or add it to the Queue', aliases=['play'])
     async def p(self, ctx, *args):
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild) #get voice client
         if voice == None: #if voice client doesn't exist, print error message
