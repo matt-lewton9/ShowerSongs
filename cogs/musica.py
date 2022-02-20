@@ -41,7 +41,7 @@ class Musica(commands.Cog):
             i = 0 #song counter
             for song in self.queue:
                 i += 1 #append to song counter
-                fields.append([f"{i}: {song['title']}", song['webpage'], False]) #add to fields array
+                fields.append([f"{i}: {song['title']} ({timeFormat(song['duration'])})", song['webpage'], False]) #add to fields array
             embed = embedBuilder(title="Queue", fields=fields)#make embed with filds
         else:
             embed = embedBuilder(title="Queue", description="None")#make embed for empty queue
@@ -106,13 +106,13 @@ class Musica(commands.Cog):
         song_url = get_song(query) #get song url from ytdl
 
         if loopNum > 11: #limit loops to 10
-            ctx.send("Get a life. Song looped 0 times")
+            await ctx.send("Get a life. Song looped 0 times")
             loopNum = 1
 
         if len(self.queue) < QUEUE_LEN: #if queue not full
             for idx in range(loopNum): #add song url to queue loopNum times
                 self.queue.append(song_url) #add song url to queue loopNum times
-                embed = embedBuilder(title=f"{song_url['title']} Added to Queue", url=song_url['webpage'], description=f"Looped {loopNum} times")#make embed
+                embed = embedBuilder(title=f"{song_url['title']} Added to Queue", url=song_url['webpage'], description=f"Looped {loopNum - 1} times")#make embed
         else:
             embed = embedBuilder(title="Queue Full")#make embed
         
